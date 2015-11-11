@@ -34,7 +34,7 @@ func init() {
 	if size == 0 {
 		size = 1000
 	}
-	border = size - 1
+	border := size - 1
 
 	packChan = make(chan pack, size)
 	store = make(map[string][]int64, 10)
@@ -72,11 +72,13 @@ func Grab() (map[string][]int64, error) {
 	mut.Lock()
 	defer mut.Unlock()
 
-	metrics = store
+	metrics := store
 
 	// erase internal store
 	store = make(map[string][]int64, len(store))
 	if soreErr != nil {
+		err := soreErr
+		soreErr = nil
 		return nil, err
 	}
 
