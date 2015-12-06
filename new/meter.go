@@ -14,10 +14,11 @@ type Meter struct {
 // Several Meters could be created with the same name, they will be organized in group in stats.
 // For example goroutine Workers should create Meters with identical name, one meter per Worker.
 // It's good practics to always close meter in defer upter creation, like:
-//   m := gomet.NewMeter("some.worker")
+//   m := gomet.New("some.worker")
 //   defer m.Close()
-func NewMeter(name string) Meter {
+func New(name string) Meter {
 
+	return Meter{}
 }
 
 // Close reports that particular goroutine's life circle is over
