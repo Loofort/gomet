@@ -40,9 +40,9 @@ func TestBasic(t *testing.T) {
 	st1 := g.States["st1"]
 	st2 := g.States["st2"]
 
-	equalInt(g.Count, 2, t)
-	equalFloat(st1.Load, 50, t)
-	equalFloat(st2.Load, 50, t)
-	equalDur(st1.Time, 0, t)
-	equalDur(st2.Time, 500*time.Nanosecond, t)
+	equal(t, g.Count, 2)
+	equalf(t, st1.Load, 50)
+	equalf(t, st2.Load, 50)
+	equal(t, st1.Time, 0)
+	equal(t, st2.Time, 500*time.Nanosecond)
 }

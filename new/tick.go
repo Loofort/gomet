@@ -73,23 +73,16 @@ func (g Group) Scale() float32 {
 // Load return average load of sate for group workers
 // load means the percent of time spent for the state
 func (g Group) Load(state string) float32 {
-	cnt := 0
 	var dur time.Duration
 	for _, w := range g.Workers {
 		s, ok := w.States[state]
 		if !ok {
 			continue
 		}
-
-		cnt++
 		dur += s.Duration
 	}
 
-	if cnt == 0 {
-		return 0
-	}
-
-	load := 100 * float32(dur) / float32((time.Duration(cnt) * g.Period))
+	load := 100 * float32(dur) / float32((time.Duration(len(g.Workers)) * g.Period))
 	return load
 }
 

@@ -10,10 +10,21 @@ import (
 
 func equal(t *testing.T, got, expected interface{}) {
 	if !reflect.DeepEqual(expected, got) {
-		_, path, line, _ := runtime.Caller(1)
+		_, path, line, _ := runtime.Caller(2)
 		_, file := filepath.Split(path)
-		t.Fatalf("\n%s:%d expected %#v but got %#v\n", file, line, expected, got)
+		t.Fatalf("\n%s:%d got %#v (%s) but expected %#v (%s)\n", file, line, got, reflect.TypeOf(got), expected, reflect.TypeOf(expected))
 	}
+}
+func equald(t *testing.T, got, expected time.Duration) {
+	equal(t, got, expected)
+}
+func equalf(t *testing.T, got, expected float32) {
+	var epsilon float32 = 0.0001
+	if (got-expected) < epsilon && (expected-got) < epsilon {
+		return
+	}
+
+	equal(t, got, expected)
 }
 
 // send 10 events, expect receiving 10 events
