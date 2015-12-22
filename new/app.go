@@ -23,10 +23,15 @@ func (a app) update(ev Event) (string, time.Duration) {
 	}
 
 	w, ok := g[ev.Worker]
+	g[ev.Worker] = worker{ev.State, ev.Time} // set new state
 	if !ok {
-		// this is worker's start , no further processing is needed
-		g[ev.Worker] = worker{ev.State, ev.Time}
+		// this is worker's start, no further processing is needed
 		return "", 0
+	}
+
+	if ev.State == "" {
+		// this is wroker's end, remove it form app sate
+		delete(g, ev.Worker)
 	}
 
 	// calculate duration for event and

@@ -8,15 +8,19 @@ import (
 	"time"
 )
 
-func equal(t *testing.T, got, expected interface{}) {
+func _equal(t *testing.T, got, expected interface{}) {
 	if !reflect.DeepEqual(expected, got) {
 		_, path, line, _ := runtime.Caller(2)
 		_, file := filepath.Split(path)
 		t.Fatalf("\n%s:%d got %#v (%s) but expected %#v (%s)\n", file, line, got, reflect.TypeOf(got), expected, reflect.TypeOf(expected))
 	}
 }
+func equal(t *testing.T, got, expected interface{}) {
+	// have to implement this wrapper in order to Caller func wroks properly
+	_equal(t, got, expected)
+}
 func equald(t *testing.T, got, expected time.Duration) {
-	equal(t, got, expected)
+	_equal(t, got, expected)
 }
 func equalf(t *testing.T, got, expected float32) {
 	var epsilon float32 = 0.0001
@@ -24,7 +28,7 @@ func equalf(t *testing.T, got, expected float32) {
 		return
 	}
 
-	equal(t, got, expected)
+	_equal(t, got, expected)
 }
 
 // send 10 events, expect receiving 10 events
@@ -83,13 +87,13 @@ func TestAggregate(t *testing.T) {
 	}
 
 	in <- evs
-	close(in)
 	tick := <-out
+	close(in)
 	g := tick.Groups["g"]
 
-	equal(t, g.Scale(), 2)
-	equal(t, g.Load("st1"), 50)
-	equal(t, g.Load("st2"), 50)
-	equal(t, g.TookTime("st1"), 0)
-	equal(t, g.TookTime("st2"), 500*time.Nanosecond)
+	equalf(t, g.Scale(period), 2)
+	equalf(t, g.Load("st1"), 0.5)
+	equalf(t, g.Load("st2"), 0.5)
+	equald(t, g.Lasted("st1"), 0)
+	equald(t, g.Lasted("st2"), 500*time.Millisecond)
 }

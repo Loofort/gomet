@@ -1,6 +1,7 @@
 package gomet
 
 import (
+	"sync/atomic"
 	"time"
 )
 
@@ -47,6 +48,11 @@ func collect(in chan Event, period time.Duration) chan []Event {
 		defer ticker.Stop()
 
 		buf := make([]Event, 0, 100)
+		wids := make(map[string]struct {
+			top int64
+			low int64
+		})
+
 		for {
 			select {
 			case ev, ok := <-in:
@@ -54,8 +60,23 @@ func collect(in chan Event, period time.Duration) chan []Event {
 					return
 				}
 				// to simplify implementation we neglect the time spending by event in input channel
-				// todo: for the high resolution stats it could be vital and needs to improve
+				// todo: for the high resolution stats it could be vital and needs to be improved
 				ev.Time = time.Now()
+
+				// for chan events calculate worker id
+				if ev.Worker == 0 {
+					// we in chan event
+					w := wids[ev.Group]
+
+					wid := &w.top //ChanIn
+					if ev.State == "" {
+						wid = &w.low //ChanOut
+					}
+
+					ev.Worker = atomic.AddInt64(wid, 1)
+					wids[ev.Group] = w
+				}
+
 				buf = append(buf, ev)
 
 			case now := <-ticker.C:
@@ -101,20 +122,15 @@ func aggregate(in chan []Event, period time.Duration) chan Tick {
 					}
 
 					// add stats to tick
-					t.set(ev.Group, ev.Worker, state, dur)
+					t.set(ev.Group, ev.Worker, state, dur, false)
 				}
 
-				// app knows end state of each worker.
-				// go through tick states and complete if needed
-				for gname, g := range t.Groups {
-					for wid, w := range g.Workers {
-						aw, ok := a[gname][wid]
-						for sname, s := range w.States {
-							if !ok || aw.State != sname {
-								s.Incomplete = 0
-								w.States[sname] = s
-							}
-						}
+				// states that are runing - are in app, but not in tick
+				// states that have finished - not in app, but are in tick
+				for gname, g := range a {
+					for wid, aw := range g {
+						dur := t.Time.Sub(aw.Start)
+						t.set(gname, wid, aw.State, dur, true)
 					}
 				}
 

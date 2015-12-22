@@ -10,15 +10,15 @@ import (
 func TestTick_1G1W1S(t *testing.T) {
 	period := time.Second
 	tick := newTick(time.Now().Add(period), period)
-	tick.set("g", 1, "st", period)
+	tick.set("g", 1, "st", period, true)
 
-	equald(t, tick.TookTime("g", "st"), 0)
-	equalf(t, tick.Load("g", "st"), 100)
+	equald(t, tick.Lasted("g", "st"), 0)
+	equalf(t, tick.Load("g", "st"), 1)
 	equalf(t, tick.Scale("g"), 1)
 
 	g := tick.Groups["g"]
-	equald(t, g.TookTime("st", period), 0)
-	equalf(t, g.Load("st", period), 100)
+	equald(t, g.Lasted("st"), 0)
+	equalf(t, g.Load("st"), 1)
 	equalf(t, g.Scale(period), 1)
 }
 
@@ -28,13 +28,13 @@ func TestTick_1G1W1S(t *testing.T) {
 func TestTick_1G2W2S(t *testing.T) {
 	period := time.Second
 	tick := newTick(time.Now().Add(period), period)
-	tick.set("g", 1, "st1", period)
-	tick.set("g", 2, "st2", period)
+	tick.set("g", 1, "st1", period, true)
+	tick.set("g", 2, "st2", period, true)
 
-	equald(t, tick.TookTime("g", "st1"), 0)
-	equald(t, tick.TookTime("g", "st2"), 0)
-	equalf(t, tick.Load("g", "st1"), 50)
-	equalf(t, tick.Load("g", "st2"), 50)
+	equald(t, tick.Lasted("g", "st1"), 0)
+	equald(t, tick.Lasted("g", "st2"), 0)
+	equalf(t, tick.Load("g", "st1"), 0.5)
+	equalf(t, tick.Load("g", "st2"), 0.5)
 	equalf(t, tick.Scale("g"), 2)
 }
 
@@ -45,13 +45,13 @@ func TestTick_1G2W2S(t *testing.T) {
 func TestTick_1G3W2S(t *testing.T) {
 	period := time.Second
 	tick := newTick(time.Now().Add(period), period)
-	tick.set("g", 1, "st1", period)
-	tick.set("g", 2, "st2", period)
-	tick.set("g", 3, "st1", 500*time.Millisecond)
+	tick.set("g", 1, "st1", period, true)
+	tick.set("g", 2, "st2", period, true)
+	tick.set("g", 3, "st1", 500*time.Millisecond, true)
 
-	equald(t, tick.TookTime("g", "st1"), 0)
-	equald(t, tick.TookTime("g", "st2"), 0)
-	equalf(t, tick.Load("g", "st1"), (100.0+0.0+50.0)/3.0)
-	equalf(t, tick.Load("g", "st2"), (0.0+100.0+0.0)/3.0)
+	equald(t, tick.Lasted("g", "st1"), 0)
+	equald(t, tick.Lasted("g", "st2"), 0)
+	equalf(t, tick.Load("g", "st1"), (1.0+0.0+0.5)/(1.0+1.0+0.5))
+	equalf(t, tick.Load("g", "st2"), (0.0+1.0+0.0)/(1.0+1.0+0.5))
 	equalf(t, tick.Scale("g"), 2.5)
 }
