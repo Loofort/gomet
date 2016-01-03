@@ -35,6 +35,7 @@ type Meter struct {
 // It's good practices to always close meter in defer after creation, like:
 //   m := gomet.New("some.worker")
 //   defer m.Close()
+// When the new Meter is created it send rais Event with State = GroupName
 func New(name string) Meter {
 	m := Meter{name, atomic.AddInt64(&gwid, 1)}
 	c <- Event{m.Group, m.Wid, name, tm}

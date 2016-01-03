@@ -17,12 +17,10 @@ func closedChan() chan Event {
 }
 
 // Setup starts internal metrics collector.
-// The collector groups metrics with specified time period (sec for seconds).
+// The collector groups metrics with specified time period.
 // I suggest not setting period less than a second.
 // Setup should be executed only once at the program start.
-func Setup(sec float32) chan Tick {
-	period := time.Duration(sec * float32(time.Second))
-
+func Setup(period time.Duration) chan Tick {
 	// 1024 is big enough to smooth activity spike.
 	// but if profiler shows permanent awaiting on c chan the collector should be added with one more goroutine reader from c
 	c = make(chan Event, 1000)
@@ -116,13 +114,13 @@ func aggregate(in chan []Event, period time.Duration) chan Tick {
 				t := newTick(aux.Time, period)
 				for _, ev := range evs {
 					// get goroutine state and duration
-					state, dur := a.update(ev)
+					state, start, dur := a.update(ev)
 					if dur == 0 {
 						continue
 					}
 
 					// add stats to tick
-					t.set(ev.Group, ev.Worker, state, dur, false)
+					t.set(ev.Group, ev.Worker, state, start, dur, false)
 				}
 
 				// states that are runing - are in app, but not in tick
@@ -130,7 +128,7 @@ func aggregate(in chan []Event, period time.Duration) chan Tick {
 				for gname, g := range a {
 					for wid, aw := range g {
 						dur := t.Time.Sub(aw.Start)
-						t.set(gname, wid, aw.State, dur, true)
+						t.set(gname, wid, aw.State, aw.Start, dur, true)
 					}
 				}
 

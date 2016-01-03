@@ -9,8 +9,9 @@ import (
 // |**|.
 func TestTick_1G1W1S(t *testing.T) {
 	period := time.Second
-	tick := newTick(time.Now().Add(period), period)
-	tick.set("g", 1, "st", period, true)
+	now := time.Now()
+	tick := newTick(now.Add(period), period)
+	tick.set("g", 1, "st", now, period, true)
 
 	equald(t, tick.Lasted("g", "st"), 0)
 	equalf(t, tick.Load("g", "st"), 1)
@@ -27,9 +28,10 @@ func TestTick_1G1W1S(t *testing.T) {
 // |++|.
 func TestTick_1G2W2S(t *testing.T) {
 	period := time.Second
-	tick := newTick(time.Now().Add(period), period)
-	tick.set("g", 1, "st1", period, true)
-	tick.set("g", 2, "st2", period, true)
+	now := time.Now()
+	tick := newTick(now.Add(period), period)
+	tick.set("g", 1, "st1", now, period, true)
+	tick.set("g", 2, "st2", now, period, true)
 
 	equald(t, tick.Lasted("g", "st1"), 0)
 	equald(t, tick.Lasted("g", "st2"), 0)
@@ -44,10 +46,11 @@ func TestTick_1G2W2S(t *testing.T) {
 // | *|.
 func TestTick_1G3W2S(t *testing.T) {
 	period := time.Second
-	tick := newTick(time.Now().Add(period), period)
-	tick.set("g", 1, "st1", period, true)
-	tick.set("g", 2, "st2", period, true)
-	tick.set("g", 3, "st1", 500*time.Millisecond, true)
+	now := time.Now()
+	tick := newTick(now.Add(period), period)
+	tick.set("g", 1, "st1", now, period, true)
+	tick.set("g", 2, "st2", now, period, true)
+	tick.set("g", 3, "st1", now, 500*time.Millisecond, true)
 
 	equald(t, tick.Lasted("g", "st1"), 0)
 	equald(t, tick.Lasted("g", "st2"), 0)

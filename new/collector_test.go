@@ -19,15 +19,24 @@ func equal(t *testing.T, got, expected interface{}) {
 	// have to implement this wrapper in order to Caller func wroks properly
 	_equal(t, got, expected)
 }
-func equald(t *testing.T, got, expected time.Duration) {
-	_equal(t, got, expected)
-}
+
 func equalf(t *testing.T, got, expected float32) {
-	var epsilon float32 = 0.0001
+	var epsilon float32 = 0.001
 	if (got-expected) < epsilon && (expected-got) < epsilon {
 		return
 	}
 
+	_equal(t, got, expected)
+}
+
+func equald(t *testing.T, got, expected time.Duration) {
+	_equal(t, got, expected)
+}
+
+func circad(t *testing.T, got, expected time.Duration) {
+	if got-expected < time.Millisecond && expected-got < time.Millisecond {
+		return
+	}
 	_equal(t, got, expected)
 }
 

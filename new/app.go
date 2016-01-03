@@ -14,7 +14,7 @@ func newApp() app {
 
 // update app state with new event,
 // return previous sate and duration for it
-func (a app) update(ev Event) (string, time.Duration) {
+func (a app) update(ev Event) (string, time.Time, time.Duration) {
 	// get group
 	g, ok := a[ev.Group]
 	if !ok {
@@ -26,7 +26,7 @@ func (a app) update(ev Event) (string, time.Duration) {
 	g[ev.Worker] = worker{ev.State, ev.Time} // set new state
 	if !ok {
 		// this is worker's start, no further processing is needed
-		return "", 0
+		return "", w.Start, 0
 	}
 
 	if ev.State == "" {
@@ -36,7 +36,7 @@ func (a app) update(ev Event) (string, time.Duration) {
 
 	// calculate duration for event and
 	dur := ev.Time.Sub(w.Start)
-	return w.State, dur
+	return w.State, w.Start, dur
 }
 
 type worker struct {

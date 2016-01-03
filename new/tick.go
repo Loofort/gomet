@@ -21,7 +21,7 @@ func newTick(tm time.Time, period time.Duration) Tick {
 	}
 }
 
-func (t Tick) set(group string, wid int64, state string, dur time.Duration, inProgress bool) {
+func (t Tick) set(group string, wid int64, state string, start time.Time, dur time.Duration, inProgress bool) {
 
 	g, ok := t.Groups[group]
 	if !ok {
@@ -37,13 +37,17 @@ func (t Tick) set(group string, wid int64, state string, dur time.Duration, inPr
 	if inProgress {
 		s.Incomplete = dur
 	}
+	if s.Count == 1 && t.Time.Sub(start) > t.Period {
+		s.Age = t.Time.Sub(start) - t.Period
+		s.Duration -= s.Age
+	}
 
 	w[state] = s
 	g[wid] = w
 	t.Groups[group] = g
 }
 
-// Sacle is the amount of workers per tick,
+// Scale is the amount of workers per tick,
 // e.g. if we have 2 workers, first is existing during whole tick and second only for half
 // then scale will be 1+0.5 = 1.5
 // It is shorthand for tick.Groups[group].Scale(tick.Period)
@@ -106,7 +110,7 @@ func (g Group) Load(state string) float32 {
 	return float32(dur) / float32(g.lifeSum())
 }
 
-// Lasted  returns average time that sate needs to become completed
+// Lasted  returns average time that state needs to become completed
 func (g Group) Lasted(state string) time.Duration {
 	cnt := int64(0)
 	var dur time.Duration
@@ -116,11 +120,9 @@ func (g Group) Lasted(state string) time.Duration {
 			continue
 		}
 
-		dur += s.Duration
-		cnt += s.Count
-		if s.Incomplete > 0 {
-			dur -= s.Incomplete
-			cnt--
+		if s.Incomplete == 0 {
+			dur += s.Duration + s.Age
+			cnt += s.Count
 		}
 	}
 	if cnt == 0 {
@@ -130,7 +132,7 @@ func (g Group) Lasted(state string) time.Duration {
 	return dur / time.Duration(cnt)
 }
 
-// Worker contains stats for one goroutine or one transfer throught channel
+// Worker contains stats for one goroutine or one transfer through channel
 type Worker map[string]State
 
 // State represent time info such as
@@ -138,9 +140,13 @@ type Worker map[string]State
 type State struct {
 	Count    int64
 	Min, Max time.Duration
+	// time spent in previous periods
+	Age time.Duration
+	// time spent since event start or period start
 	Duration time.Duration
+
 	// incomplete contains duration of state that is in progress by the end of the tick
-	// if it is 0 it means that worker not in this state by the end of aggreagte period
+	// if it is 0 it means that worker not in this state by the end of aggregate period
 	Incomplete time.Duration
 }
 
