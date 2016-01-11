@@ -115,7 +115,7 @@ func aggregate(in chan []Event, period time.Duration) chan Tick {
 				for _, ev := range evs {
 					// get goroutine state and duration
 					state, start, dur := a.update(ev)
-					if dur == 0 {
+					if state == "" {
 						continue
 					}
 

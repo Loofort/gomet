@@ -55,6 +55,12 @@ func (t Tick) Scale(group string) float32 {
 	return t.Groups[group].Scale(t.Period)
 }
 
+// Count returns number of times that group was in particular state during period
+// It is shorthand for t.Groups[group].Count(state)
+func (t Tick) Count(group, state string) int {
+	return t.Groups[group].Count(state)
+}
+
 // Load returns average load of sate for workers group
 // load means the percent of time spent for the state during tick period
 // It is shorthand for tick.Groups[group].Load(state, tick.Period)
@@ -62,7 +68,7 @@ func (t Tick) Load(group, state string) float32 {
 	return t.Groups[group].Load(state)
 }
 
-// Lasted  returns average time that sate needs to get completed
+// Lasted  returns average time that state needs to get completed
 // It is shorthand for tick.Groups[group].Lasted(state)
 func (t Tick) Lasted(group, state string) time.Duration {
 	return t.Groups[group].Lasted(state)
@@ -91,6 +97,19 @@ func (g Group) lifeSum() (dur time.Duration) {
 	return dur
 }
 
+// Count return count of times group been in particular state
+func (g Group) Count(state string) int {
+	cnt := int64(0)
+	for _, w := range g {
+		s, ok := w[state]
+		if !ok {
+			continue
+		}
+		cnt += s.Count
+	}
+	return int(cnt)
+}
+
 // Load returns average load of sate for workers group
 // load means the percent of time spent for the state
 func (g Group) Load(state string) float32 {
@@ -107,10 +126,14 @@ func (g Group) Load(state string) float32 {
 		dur += s.Duration
 	}
 
-	return float32(dur) / float32(g.lifeSum())
+	lifeSum := g.lifeSum()
+	if lifeSum == 0 {
+		return 0
+	}
+	return float32(dur) / float32(lifeSum)
 }
 
-// Lasted  returns average time that state needs to become completed
+// Count returns number of times that group was in particular state during period
 func (g Group) Lasted(state string) time.Duration {
 	cnt := int64(0)
 	var dur time.Duration
